@@ -11,7 +11,7 @@ const Navbar = ({setModifications}) => {
     try {
       const res = await axios.post('http://localhost:5000/modifications',{json1:parsedValue});
  // Adjust this endpoint
-
+console.log(res.data)
       setModifications(res.data);
     } catch (err) {
       console.error('Failed to fetch modifications', err);

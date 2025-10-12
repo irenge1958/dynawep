@@ -49,8 +49,128 @@
     width: 50px;
     margin: 0 auto;
   }
-  
+  .upload-buttonx {
+    background-color: #007bff;
+    color: white;
+    padding: 10px 24px;
+    font-size: 16px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.3s;
+    width: 50px;
+    margin: 0 auto;
+  }
   .upload-button:hover {
     background-color: #0056b3;
   }
-  
+  /* Styles pour la sélection visuelle */
+.dynawep-toolbar {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  background: white;
+  padding: 15px;
+  border-radius: 10px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+  z-index: 10000;
+  border: 2px solid #007bff;
+  font-family: Arial, sans-serif;
+}
+.dynawep-toolbarx {
+  position: fixed;
+  top: 20px;
+  left: 20px;
+
+  padding: 15px;
+  border-radius: 10px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+  z-index: 10000;
+
+  font-family: Arial, sans-serif;
+  width:100px
+}
+.toolbar-content {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+#toolbar-status {
+  font-weight: bold;
+  color: #007bff;
+}
+
+.modification-panel {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: white;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 4px 30px rgba(0,0,0,0.2);
+  z-index: 10001;
+  min-width: 300px;
+  max-width: 400px;
+ 
+}
+
+.panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 10px;
+}
+
+.panel-content textarea {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  font-family: inherit;
+  resize: vertical;
+}
+
+.panel-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 15px;
+}
+
+.btn-primary {
+  background: #007bff;
+  color: white;
+  border: none;
+  padding: 10px 15px;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.btn-secondary {
+  background: #6c757d;
+  color: white;
+  border: none;
+  padding: 10px 15px;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.btn-danger {
+  background: #dc3545;
+  color: white;
+  border: none;
+  padding: 10px 15px;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.close-panel {
+  background: none;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+  color: #999;
+}

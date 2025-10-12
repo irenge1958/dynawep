@@ -11,7 +11,7 @@ function App() {
       <div>
         <Navbar setModifications={setModifications}/>
         <div style={{display:'flex',width:'100%',height:'100vh'}}>
-        <UploadPage modifications={modifications} /> 
+        <UploadPage modifications={modifications} setModifications={setModifications}/> 
         <Widget modifications={modifications} setModifications={setModifications}/>
         </div>
       </div>
