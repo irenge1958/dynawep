@@ -1,3 +1,4 @@
+// web
 import React from 'react';
 import { FaUpload } from 'react-icons/fa';
 import './ImportBox.css';
@@ -56,7 +57,7 @@ const [showModificationPanel, setShowModificationPanel] = useState(false);
     modifications?.forEach(mod => {
       // Common element targeting logic
       let elements = [];
-      if (mod.limitFirst) {
+      if (mod.limitFirst && !mod.limitStart) {
         elements = Array.from(iframeDoc.querySelectorAll(mod.selector)).slice(0, mod.limitFirst);
       }
       else if (mod.limitStart) {
@@ -145,7 +146,7 @@ const [showModificationPanel, setShowModificationPanel] = useState(false);
       }
     });
   };
-
+  
 const enableSelectionMode = () => {
   setIsSelectionMode(true);
   setShowModificationPanel(false);
@@ -274,6 +275,24 @@ console.log(modifications)
       }
     }, [modifications]);
  // ✅ AJOUTÉ - Barre d'outils et panel de modification
+ const saveEditedHtml = async () => {
+  const iframeDoc = iframeRef.current.contentDocument;
+  const updatedHtml = iframeDoc.documentElement.outerHTML;
+
+  await axios.post('http://localhost:5000/save-edited-html', {
+    filename: 'index.html',
+    content: updatedHtml,
+  });
+
+  alert('✅ Edited code saved!');
+};
+const handleExport = async () => {
+  // Save edited content first
+  await saveEditedHtml();
+
+  // Then download zip
+  window.location.href = "http://localhost:5000/export-folder";
+}; 
 return (
   <div style={{ width: '100%', height: '100vh', overflow: 'auto', backgroundColor: '#121212', position: 'relative' }}>
     
@@ -305,7 +324,7 @@ return (
       <div className="dynawep-toolbarx">
         <div className="toolbar-content">
         <label  style={{ cursor: "pointer" }}>
-      <div className="upload-buttonx">Export <FaDownload  /></div>
+      <div className="upload-buttonx" onClick={handleExport}>Export <FaDownload  /></div>
     </label>
           
         </div>
