@@ -1,6 +1,6 @@
 .upload-page {
-    background-color: #0e0e0e;
-    height: 100vh;
+    background-color: transparent;
+    height: 100%;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -79,7 +79,7 @@
 }
 .dynawep-toolbarx {
   position: fixed;
-  top: 20px;
+  top: 5px;
   left: 20px;
 
   padding: 15px;
@@ -111,8 +111,7 @@
   border-radius: 10px;
   box-shadow: 0 4px 30px rgba(0,0,0,0.2);
   z-index: 10001;
-  min-width: 300px;
-  max-width: 400px;
+width: 250px;
  
 }
 
@@ -126,7 +125,7 @@
 }
 
 .panel-content textarea {
-  width: 100%;
+  width: 70%;
   padding: 10px;
   border: 1px solid #ddd;
   border-radius: 5px;

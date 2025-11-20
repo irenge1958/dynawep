@@ -1,6 +1,7 @@
 import React from 'react';
 import './Widget.css';
 import { useState, useEffect } from 'react';
+import SettingsBackupRestoreIcon from '@mui/icons-material/SettingsBackupRestore';
 import tinycolor from "tinycolor2";
 const Widget = ({modifications,setModifications}) => {
   function hasColorWord(str) {
@@ -350,35 +351,62 @@ console.log(arr[x].style)
         return [];
     }
   }
-  return (
+
+  const remove = (indexPosition) => {
+    const newArr = modifications.map((item, i) => {
+      if (i === indexPosition) {
+        console.log(item)
+        return { ...item, suppressed: indexPosition }; // add or update key
+      }
+      return item;
+    });
+  
+    setModifications(newArr);
+    console.log(newArr);
+  };
+  const removeondele = (pos) => {
+    const newArr = modifications.map((item, i) => {
+      if (i === pos) {
+        // destructure to remove both 'suppressed' and 'processed'
+        const { suppressed, processed, ...rest } = item;
+        return rest; // return object without those keys
+      }
+      return item;
+    });
+  
+    setModifications(newArr);
+    console.log(newArr);
+  };
+    return (
     <div className="widget-container dark-theme">
       <h2 className="widget-title">Widget</h2>
-      {modifications.map((x1,i)=>{
-        return(<>{styled(x1)==='grid-template-columns'||styled(x1)==='filter'||styled(x1).includes('transition')||styled(x1)==='box-shadow'?'':<div style={{display:'flex'}}><h2 style={{color:'white',marginTop:'-5px',flex:1}}></h2><label style={{flex:9}} htmlFor="colorPicker" className="widget-title" >{x1.widget?x1.widget:`Change ${x1.element || x1.selector} ${styled(x1)}:`}</label>
+      {[...modifications].reverse().map((x1,i)=>{
+        const reversedIndex = modifications.length - 1 - i;
+        return(<>{styled(x1)==='grid-template-columns'||styled(x1)==='filter'||styled(x1).includes('transition')||styled(x1)==='box-shadow'?'':<div style={!(x1.suppressed == undefined || x1.suppressed === null)?{display:'flex',color:'gray'}:{display:'flex',color:'white'}}>{!(x1.suppressed == undefined || x1.suppressed === null)?<button className="close-panel"><SettingsBackupRestoreIcon onClick={()=>removeondele(reversedIndex)} /></button>:<button className="close-panel" onClick={() => remove(reversedIndex)}>×</button>}<h2 style={{marginTop:'-5px',flex:1}}></h2><label style={{flex:9}} htmlFor="colorPicker"  >{x1.widget?x1.widget:`Change ${x1.element || x1.selector} ${styled(x1)}:`}</label>
         {hasColorWord(styled(x1)) ? (
    // Show color input
    <input
      id="colorPicker"
      type="color"
-     value={tinycolor(getBackgroundColor(modifications, i)).toHexString()}
+     value={tinycolor(getBackgroundColor(modifications, reversedIndex)).toHexString()}
      onChange={(e) => {
        const rawValue = e.target.value;
-       setModifications(replaceBackgroundColor(modifications, rawValue, i));
+       setModifications(replaceBackgroundColor(modifications, rawValue, reversedIndex));
      }}
      style={{ cursor: 'pointer' }}
    />
- ) : typeof getBackgroundColor(modifications, i) === 'string' && getBackgroundColor(modifications, i) !== '0' && !hasper(getBackgroundColor(modifications, i)) && !haspx(getBackgroundColor(modifications, i)) && !hass(getBackgroundColor(modifications, i)) && !hasrem(getBackgroundColor(modifications, i))? (
+ ) : typeof getBackgroundColor(modifications, reversedIndex) === 'string' && getBackgroundColor(modifications, reversedIndex) !== '0' && !hasper(getBackgroundColor(modifications, reversedIndex)) && !haspx(getBackgroundColor(modifications, reversedIndex)) && !hass(getBackgroundColor(modifications, reversedIndex)) && !hasrem(getBackgroundColor(modifications, reversedIndex))? (
    // Show select for text
    <select
-     value={getBackgroundColor(modifications, i)}
+     value={getBackgroundColor(modifications, reversedIndex)}
      onChange={(e) => {
        const selectedValue = e.target.value;
-       setModifications(replaceBackgroundColor(modifications, selectedValue, i));
+       setModifications(replaceBackgroundColor(modifications, selectedValue, reversedIndex));
      }}
      style={{ cursor: 'pointer' }}
    >
      <option value="" disabled>
-     {getBackgroundColor(modifications, i)}
+     {getBackgroundColor(modifications, reversedIndex)}
      </option>
     {transformString(styled(x1)).map((font) => (
      <option key={font} value={font} style={{ fontFamily: font }}>
@@ -390,7 +418,7 @@ console.log(arr[x].style)
    // Show number input
    <input
      type="number"
-     value={parseFloat(getBackgroundColor(modifications, i))}
+     value={parseFloat(getBackgroundColor(modifications, reversedIndex))}
      onChange={(e) => {
        const rawValue = e.target.value;
       // Check for unit types
@@ -406,7 +434,7 @@ console.log(arr[x].style)
    hasRem ? `${rawValue}rem` :
    hasSec ? `${rawValue}s` :
    rawValue; // Fallback (no unit)
-       setModifications(replaceBackgroundColor(modifications, processedValue, i));
+       setModifications(replaceBackgroundColor(modifications, processedValue, reversedIndex));
      }}
      style={{ cursor: 'pointer' }}
    />

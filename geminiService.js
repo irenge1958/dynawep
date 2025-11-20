@@ -28,7 +28,8 @@ RESPONSE: Return ONLY valid JSON with this exact structure:
       "limitFirst": number,
       "nthElement": number,
       "style": "css-properties",
-      "widget": "user-friendly widget name"
+      "widget": "user-friendly widget name",
+      "newtext": "welcome to my page"
     }
   ]
 }
@@ -70,10 +71,88 @@ Response: {"operations": [{"element": "div", "style": "box-shadow: 0 4px 6px rgb
 
 Command: "make image circular"
 Response: {"operations": [{"element": "img", "style": "border-radius: 50%", "widget": "Make image circular"}]}
-
+Command: "selector:img,"nthElement": 1,current style:{width:50%},reduce this image"
+Response: {"operations": [{"selector": "img","nthElement": 1, "style":"height: auto,width: 25%", "widget": "reduce image"}]}
 Command: "change body background to dark"
-Response: {"element": "body", "style": "background-color: #121212", "widget": "Change page background"}]
+Response: {"operations": [{element": "body", "style": "background-color: #121212", "widget": "Change page background"}]}
+Command: " "selector": "img","nthElement": 1, ,put this image in the middle"
+Response: {"operations": [{"selector": "img","nthElement": 1, "style": "position: absolute;left: 50%;top: 50%;transform: translate(-50%, -50%)", "widget": "push from left"}]}
+Command: "put the first three button in absolute position"
+Response: {"operations": [{ "selector": "button", "limitFirst": 3,"style": "position: absolute","widget": "set Position of the button"}]}
 
+Command: "I want these 3 first button to be right in the middle of their container"
+Response: {"operations": [{
+  "selector": "button",
+  "limitFirst": 3,
+  "style": "top: 50%; left: 50%; transform: translate(-50%, -50%)",
+  "widget": "Push button from left"
+}]}
+Command: "push the 3 first button from top"
+Response: {"operations": [{
+  "selector": "button",
+  "limitFirst": 3,
+  "style": "top: 10%",
+  "widget": "Push button from Top"
+}]}
+Command: "put the first 2 images on the same line "
+Response: {"operations": [{
+  "selector": "img",
+  "limitFirst": 2,
+  "style":"display: flex; gap: 3px;align-items: baseline",
+  "createflex":"true" ,
+  "widget": "add space between images"
+}]}
+Command: "put on the same line the 3 paragraph from the third"
+Response: {"operations": [{
+  "selector": "p",
+  "limitStart": 3,
+  "limitFirst": 3,
+  "style":"display: flex; gap: 3px;align-items: baseline",
+  "createflex":"true" ,
+  "widget": "add space between p"
+}]}
+Command: "selector:div,nthelemnt:3,put the content on the same line"
+Response: {"operations": [ {
+  "selector": "div",
+  "nthElement": 3,
+  "style": "gap: 20px",
+  "widget": "add space between contents"
+}]}
+Command: "selector:p,nthelemnt:1,make it bold"
+Response: {"operations": [ {
+  "selector": "p",
+  "nthElement": 1,
+  "style": "font-weight:bold",
+  "widget": "change the boldeness"
+}]}
+Command: "selector:p,nthelemnt:1,change the style of text"
+Response: {"operations": [ {
+  "selector": "p",
+  "nthElement": 1,
+  "style": "font-family:sans-serif",
+  "widget": "change style"
+}]}
+Command: "selector:p,nthelemnt:1,style:{font-size:10px},increase the size of the text "
+Response: {"operations": [ {
+  "selector": "p",
+  "nthElement": 1,
+  "style": "font-size: 20px",
+  "widget": "increase text"
+}]}
+
+Command: "selector:h1,nthElement:3,change this text into welcome to my page" 
+Response: {"operations": [ { 
+  "selector": "h2",
+  "nthElement": 3, 
+  "newtext": "welcome to my page",
+  "style":"none:none".
+  "widget": "none"
+}]}
+Style Ordering Rule:
+_When an element has multiple CSS properties in a single style string, always place metric properties (e.g., width, height, margin, padding,gap) in the second position;example(height: auto; width: 300px instead of width: 300px; height: auto),and if you have many metrics put the most important to the second position associated as well with the widget
+_for images when increasing or decreasing,if i have specified to reduce height or width,set one of the two auto and the other property on the second position give it the numeric value
+Metric rule:
+_When assigning such as width:10px if user want to increase double it width:20px if decrease divide by 2 it: width:5px but if not given in the command assign based on standard css size
 WIDGET NAMING GUIDELINES:
 - Use action-oriented names: "Change...", "Add...", "Increase...", "Set..."
 - Be specific about what is being modified

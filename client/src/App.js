@@ -5,13 +5,13 @@ import Widget from './component/Widget'
 import { useState,useEffect } from 'react';
 function App() {
   const [modifications, setModifications] = useState([]);
- 
+  const [loading, setLoading] = useState(false);
   return (
     <div className="App">
       <div>
-        <Navbar setModifications={setModifications}/>
-        <div style={{display:'flex',width:'100%',height:'100vh'}}>
-        <UploadPage modifications={modifications} setModifications={setModifications}/> 
+        <Navbar  setLoading={setLoading} setModifications={setModifications}/>
+        <div style={{display:'flex',width:'100%',height:'100%'}}>
+        <UploadPage modifications={modifications} loading={loading} setLoading={setLoading} setModifications={setModifications}/> 
         <Widget modifications={modifications} setModifications={setModifications}/>
         </div>
       </div>
