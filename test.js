@@ -1,34 +1,22 @@
-require('dotenv').config();
-const deepseekService = require('./deepseekService');
+// test-api.js
+import axios from 'axios';
+import dotenv from 'dotenv';
+dotenv.config();
 
-async function testDeepSeek() {
-  console.log('🧪 Testing DeepSeek Service...\n');
+async function testAPI() {
+  const apiKey = process.env.DEEPSEEK_API_KEY;
+  console.log('API Key:', apiKey ? 'Present' : 'Missing');
+  console.log('Length:', apiKey?.length);
   
-  const testCommands = [
-    "make the header blue",
-    "center the main button", 
-    "increase font size of paragraphs",
-    "add margin around images"
-  ];
-
-  for (const command of testCommands) {
-    try {
-      console.log(`📝 Testing: "${command}"`);
-      
-      const result = await deepseekService.parseNLCommand(command);
-      
-      console.log('✅ Success! Response:');
-      console.log(JSON.stringify(result, null, 2));
-      console.log('---\n');
-      
-    } catch (error) {
-      console.log('❌ Error:', error.message);
-      console.log('---\n');
-    }
-    
-    // Attendre 1 seconde entre les tests pour éviter les rate limits
-    await new Promise(resolve => setTimeout(resolve, 1000));
+  try {
+    const response = await axios.get('https://api.deepseek.com/v1/models', {
+      headers: { 'Authorization': `Bearer ${apiKey}` }
+    });
+    console.log('✅ API works! Available models:', response.data.data.map(m => m.id));
+  } catch (err) {
+    console.error('❌ API test failed:', err.response?.status, err.response?.data);
   }
 }
 
-testDeepSeek();
+testAPI();
+

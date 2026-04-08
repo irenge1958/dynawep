@@ -373,24 +373,12 @@ console.log(transformedArray.includes(`${e.target.getAttribute("meid")}`) && (`$
 const removeAllHighlights = (myelement) => {
   if (!iframeRef.current) return;
 
-  const iframeDoc =
-    iframeRef.current.contentDocument ||
-    iframeRef.current.contentWindow.document;
-
+  const iframeDoc = iframeRef.current.contentDocument || iframeRef.current.contentWindow.document;
   const allElements = iframeDoc.querySelectorAll('*');
 
-  // Normalize myelement into an array (or null)
-  const protectedElements = Array.isArray(myelement)
-    ? myelement
-    : myelement
-    ? [myelement]
-    : [];
-
-  allElements.forEach((element) => {
-    // If element is in the protected list, skip it
-    const isProtected = protectedElements.includes(element);
-
-    if (!isProtected) {
+  allElements.forEach(element => {
+    // If myelement exists, skip it; otherwise remove styles
+    if (!myelement || element !== myelement) {
       element.style.outline = '';
       element.style.cursor = '';
     }
@@ -602,9 +590,8 @@ console.log(modifications)
 }, [modifications]);
 const handleClose = () => {
   setShowModificationPanel(false);  // hide the panel
-  removeAllHighlights(selectedElements); // example: call another function
-  console.log("Panel closed!");
-  setSelectedElements([])       // do anything else you need
+  removeAllHighlights(selectedElement); // example: call another function
+  console.log("Panel closed!");       // do anything else you need
 };
 
  // ✅ AJOUTÉ - Barre d'outils et panel de modification
@@ -755,7 +742,7 @@ return (
           <input type="file" style={{display:'none'}} id="file-cover" accept=".zip"  webkitdirectory="true" directory="" multiple onChange={handleUpload} />
           <label htmlFor="file-cover">
           <FaUpload className="upload-icon" />
-          <p className="upload-text" >Upload your website here</p>
+          <p className="upload-text">Upload your website here</p>
           <div className="upload-button" >Upload</div>
           </label>
         </div>
