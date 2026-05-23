@@ -17,6 +17,7 @@ const [showModificationPanel, setShowModificationPanel] = useState(false);
   const [selectedHtml, setSelectedHtml] = useState("");
   const [selectedElements, setSelectedElements] = useState([]);
   const [me,setME]=useState([])
+  const [positions,setPosition]=useState({})
   const [updatedrecently, setupdatedrecently] = useState(false);
  const getpa=async()=>{
     const res=await axios.get('http://localhost:5000/check-html')
@@ -58,11 +59,22 @@ const [showModificationPanel, setShowModificationPanel] = useState(false);
   };
   const applyModifications = (iframe) => {
     const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+// This ONLY gets elements that have the 'meid' attribute
+const elementsWithMeid = iframeDoc.querySelectorAll('[meid]');
 
+// Convert to array (only elements with meid are included)
+const meidArray = Array.from(elementsWithMeid).map(el => ({
+    element: el,
+    meid: el.getAttribute('meid')
+}));
+const meidArray2 = Array.from(elementsWithMeid).map(el => ( el.getAttribute('meid')));
+console.log(meidArray,meidArray2);
     // Create a style element for hover rules (added at top level)
     const styleTag = iframeDoc.createElement('style');
     iframeDoc.head.appendChild(styleTag);
-    
+      // 🔥 batching variables
+  let updatedMods = [...modifications];
+  let hasChanges = false;
     modifications?.forEach((mod, index)=> {
       // Common element targeting logic
       let elements = [];
@@ -74,7 +86,7 @@ const [showModificationPanel, setShowModificationPanel] = useState(false);
       }
       else if (!mod.createflex && mod.limitLast &&  (mod.suppressed === undefined || mod.suppressed === null)) {
         elements = Array.from(iframeDoc.querySelectorAll(mod.selector)).slice(-mod.limitLast);
-      } else if (!mod.createflex && mod.nthElement && !mod.newtext &&  (mod.suppressed === undefined || mod.suppressed === null)) {
+      } else if (!mod.createflex && mod.nthElement && !mod.element && !mod.newtext &&  (mod.suppressed === undefined || mod.suppressed === null)) {
         console.log(mod.processed,mod.style,mod.nthElement,mod.selector)
         const allElements = Array.from(iframeDoc.querySelectorAll(mod.selector));
         elements = allElements[mod.nthElement - 1] ? [allElements[mod.nthElement - 1]] : [];
@@ -83,41 +95,159 @@ const [showModificationPanel, setShowModificationPanel] = useState(false);
         elements = Array.from(iframeDoc.querySelectorAll(mod.element));
         console.log(elements)
       }
-     else if (mod.createflex && mod.style.includes('display') &&  (mod.suppressed === undefined || mod.suppressed === null)) { 
+     else if ((mod.createflex==="new" || mod.createflex==="old") && !mod.element && mod.style.includes('display') &&  (mod.suppressed === undefined || mod.suppressed === null)) { 
         console.log(mod.selectors)
         console.log(mod)
         console.log(Array.isArray(mod.selectors))
         console.log(Array.isArray(mod.selectors[0]))
         console.log(mod.selectors[0].element)
-        const elementsToMove = mod.selectors
-        .map(item => {
-          const nodes = iframeDoc.querySelectorAll(item.element);
-          console.log(nodes)
-          console.log(item.nthElement)
+        console.log(mod.createflex)
+        if(mod.createflex==="new"){
+          const elementsToMove = mod.selectors
+          .map(item => {
+            const nodes = iframeDoc.querySelectorAll(item.element);
+            console.log(nodes)
+            console.log(item.nthElement)
+            
+            return nodes[Number(item.nthElement) - 1];
+          })
+          .filter(el => el); // remove undefined if position doesn't exist
+         
+          const wrapper = iframeDoc.createElement('div');
           
-          return nodes[Number(item.nthElement) - 1];
-        })
-        .filter(el => el); // remove undefined if position doesn't exist
+          
+          console.log(elementsToMove)
+          const first = elementsToMove[0];
+          first.parentNode.insertBefore(wrapper, first);
+          elementsToMove.forEach(el => {
+            wrapper.appendChild(el);
+          });
+         // Store original positions before moving
+      const originalPositions = mod.selectors.map(el => {
+        
+        return el.nthElement;
+    });
+         // Update positions of moved elements (now they're children of wrapper)
+      const newpositions = Array.from(wrapper.children).map((child, index) => {
+        // Get the position of each child within all elements of its type in the document
+        const allOfType = Array.from(iframeDoc.querySelectorAll(child.tagName.toLowerCase()));
+        const position = allOfType.indexOf(child);
+        console.log(`Child ${index + 1} (${child.tagName}) is now at position ${position+1}`);
+        return position+1;
+    });
+    // Function to update modifications
+   
+  
+  console.log(newpositions,originalPositions)
+  console.log(JSON.stringify(newpositions) === JSON.stringify(originalPositions))
+    if(JSON.stringify(newpositions)!==JSON.stringify(originalPositions)){
+            console.log(newpositions,originalPositions)
+            updatedMods = updatedMods.map(m => {
+              if (m.id === mod.id) {
+                hasChanges = true;
+            
+                return {
+                  ...m,
+                  selectors: m.selectors.map((sel, i) => ({
+                    ...sel,
+                    nthElement: newpositions[i],
+                  })),
+                };
+              }
+              return m;
+            });
+    }
+          console.log(wrapper)
+          elements=[wrapper]
+          const allOfType = Array.from(iframeDoc.querySelectorAll('div'));
+  
+          const index = allOfType.indexOf(wrapper) + 1;
+          console.log(index)
+          
+            mod.nthElement = index;
        
-        const wrapper = iframeDoc.createElement('div');
+        }
         
+        if(mod.createflex==='old'){
+          const allElements = Array.from(iframeDoc.querySelectorAll('div'));
+          elements =allElements.filter((a)=>a.getAttribute("meid")===mod.id)
+        }
         
-        console.log(elementsToMove)
-        const first = elementsToMove[0];
-        first.parentNode.insertBefore(wrapper, first);
-        elementsToMove.forEach(el => {
-          wrapper.appendChild(el);
-        });
-        console.log(wrapper)
-        elements=[wrapper]
-        const allOfType = Array.from(iframeDoc.querySelectorAll('div'));
-
-        const index = allOfType.indexOf(wrapper) + 1;
-        console.log(index)
-        
-          mod.nthElement = index;
-     
         } 
+        else if ((mod.createflex==="new" || mod.createflex==="old") && mod.element &&  (mod.suppressed === undefined || mod.suppressed === null)) { 
+         
+          console.log(mod.content,mod.element)
+      
+
+          if (mod.createflex === "new") {
+              
+              // Create wrapper element
+              const wrapper = iframeDoc.createElement(mod.element || 'div');
+              
+              // Handle mod.content - assuming it could be string or DOM node
+              if (typeof mod.content === 'string') {
+                  wrapper.innerHTML = mod.content;
+              } else if (mod.content instanceof Node) {
+                  wrapper.appendChild(mod.content);
+              }
+              
+              // Append wrapper if not already in document
+              if (!iframeDoc.body.contains(wrapper)) {
+                  iframeDoc.body.appendChild(wrapper);
+              }
+              
+              console.log(wrapper);
+              
+              // Store wrapper in elements array
+              elements = [wrapper];
+              
+              // Find index of this wrapper among elements of same type
+              const allOfType = Array.from(iframeDoc.querySelectorAll(mod.element));
+              const index = allOfType.indexOf(wrapper) + 1;
+              console.log(index);
+              
+              mod.nthElement = index;
+          }
+          
+          if(mod.createflex==='old'){
+            const allElements = Array.from(iframeDoc.querySelectorAll(mod.element));
+            elements =allElements.filter((a)=>a.getAttribute("meid")===mod.id)
+          }
+          
+          } 
+     if(mod.suppressed === undefined || mod.suppressed === null ){
+      const allOfType = Array.from(iframeDoc.querySelectorAll(elements[0].tagName.toLowerCase()));
+      const originalPositions = mod.nthElement
+      const currentposition=allOfType.indexOf(elements[0])+1
+      console.log(originalPositions,currentposition,elements[0])
+      if (originalPositions !== currentposition) {
+        updatedMods = updatedMods.map(m => {
+          if (m.id === mod.id) {
+            hasChanges = true;
+          
+            return {
+              ...m,
+              nthElement: currentposition
+            };
+          }
+          return m;
+        });
+      }
+
+     }
+     if(mod.createflex==="new" && (mod.suppressed === undefined || mod.suppressed === null ) ){
+      updatedMods = updatedMods.map(m => {
+        if (m.id === mod.id) {
+          hasChanges = true;
+        
+          return {
+            ...m,
+            createflex:'old'
+          };
+        }
+        return m;
+      });
+     }
       // Apply base styles
       if (elements) { 
         
@@ -126,7 +256,8 @@ const [showModificationPanel, setShowModificationPanel] = useState(false);
             if (!el.hasAttribute("data-original-style")) {
               el.setAttribute("data-original-style", el.getAttribute("style") || "");
             }
-            if (!el.hasAttribute("meid")) {
+            if (!el.hasAttribute("meid") && !meidArray2.includes(mod.id)) {
+              console.log(!meidArray2.includes(mod.id))
               el.setAttribute("meid", `${mod.id}`);
             }
          
@@ -147,7 +278,11 @@ const [showModificationPanel, setShowModificationPanel] = useState(false);
             el.setAttribute("data-dynawep-mods", JSON.stringify(mods));
           
             // Apply the style
-            el.style.cssText += mod.style;
+            console.log(el.getAttribute("meid"),mod.id)
+            if(el.getAttribute("meid")===mod.id){
+              el.style.cssText += mod.style;
+            }
+            
           });
             }
     
@@ -219,6 +354,9 @@ const [showModificationPanel, setShowModificationPanel] = useState(false);
         elementsToRemove.forEach(el => el.parentNode?.removeChild(el));
       }
     });
+    if (hasChanges) {
+      setModifications(updatedMods);
+    }
   };
   
 const enableSelectionMode = () => {
@@ -266,8 +404,15 @@ const setupSelectionEvents = () => {
 
   const handleClick = (e) => {
     if (!isSelectionMode) return;
+
   console.log(e.target)
 const tag = e.target.tagName.toLowerCase();
+if(tag==='body' || tag==='html'){
+  const x = e.clientX;  // X coordinate relative to viewport
+  const y = e.clientY;  // Y coordinate relative to viewport
+  setPosition({position:'absolute',left:x+'px',top:y+'px'})
+console.log({position:'absolute',left:x+'px',top:y+'px'})
+}
   const iframe = iframeRef.current;
   const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
   
@@ -305,8 +450,8 @@ const tag = e.target.tagName.toLowerCase();
 console.log(selectedElements,e.target)
 console.log(`${e.target.getAttribute("meid")}`!=='null')
 console.log(`${e.target.getAttribute("meid")}`)
-console.log(transformedArray.includes(`${e.target.getAttribute("meid")}`) && (`${e.target.getAttribute("meid")}`!=='null'))
-  if(transformedArray.includes(`${e.target.getAttribute("meid")}`) && (`${e.target.getAttribute("meid")}`!=='null')){
+console.log(transformedArray.includes(`${e.target.getAttribute("meid")}`) && (`${e.target.getAttribute("meid")}`!=='null') && (`${e.target.getAttribute("meid")}`!=='undefined'))
+  if(transformedArray.includes(`${e.target.getAttribute("meid")}`) && (`${e.target.getAttribute("meid")}`!=='null') && (`${e.target.getAttribute("meid")}`!=='undefined')){
     console.log(selectedElements)
     setSelectedElements(
       selectedElements.filter((el) => {
@@ -349,6 +494,7 @@ console.log(transformedArray.includes(`${e.target.getAttribute("meid")}`) && (`$
       console.log(updatedrecently)
     }
     setShowModificationPanel(true);
+    console.log(modifications)
   };
   
 
@@ -435,32 +581,41 @@ const getElementDescription = () => {
     iframeRef.current.contentDocument ||
     iframeRef.current.contentWindow.document;
 console.log(selectedElements)
-  const description = selectedElements.map(el => {
-
-    const tag = el.tagName.toLowerCase();
-    
-    const computedStyle = iframeDoc.defaultView.getComputedStyle(el);
-
-    const allOfType = iframeDoc.querySelectorAll(tag);
-
-    const nthElement = Array.from(allOfType).indexOf(el) + 1;
-
-    const styleObject = {};
-
-    relevantProperties.forEach(prop => {
+const description = selectedElements.map(el => {
+  const tag = el.tagName.toLowerCase();
+  const computedStyle = iframeDoc.defaultView.getComputedStyle(el);
+  const allOfType = iframeDoc.querySelectorAll(tag);
+  const nthElement = Array.from(allOfType).indexOf(el) + 1;
+  
+  const styleObject = {};
+  relevantProperties.forEach(prop => {
       styleObject[prop] = computedStyle.getPropertyValue(prop);
-    });
-
+  });
+  
+ console.log(positions)
+  if(tag === "html" || tag === "body"){
     return {
       selector: tag,
       nthElement: nthElement,
-      styleObject
-    };
-  });
+      styleObject,
+      positions  // This can be directly applied to an element
+  };
+  }
+  else{
+    return {
+      selector: tag,
+      nthElement: nthElement,
+      styleObject,
+      
+  };
+  }
+  
+});
 
-  return description;
+return description;
 };
 console.log(getElementDescription())
+console.log(positions)
 useEffect(() => {
   if (isSelectionMode && iframeRef.current) {
     const cleanup = setupSelectionEvents();
@@ -481,7 +636,12 @@ const newmod = async (change) => {
 
 const newob=base[0]
 const mychange = base.map((b) => {
-  return `selector:${b.selector},nthelement:${b.nthElement},current style:${(JSON.stringify(b.styleObject, null, 2))}`
+  if(b.positions){
+    return `selector:${b.selector},nthelement:${b.nthElement},current style:${(JSON.stringify(b.styleObject, null, 2))},new style:${(JSON.stringify(b.positions, null, 2))}`
+  }
+  else{
+    return `selector:${b.selector},nthelement:${b.nthElement},current style:${(JSON.stringify(b.styleObject, null, 2))}`
+  }
 });
 
 const groupId = "resize_" + crypto.randomUUID();
@@ -537,6 +697,7 @@ function getUniqueSelector(el, dom) {
 
 
 useEffect(() => {
+
   if (!iframeRef.current) return;
 
   const iframeDoc =

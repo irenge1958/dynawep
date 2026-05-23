@@ -16,11 +16,13 @@ const Navbar = ({setModifications,setLoading}) => {
 //     } catch (err) {
 //       console.error('Failed to fetch modifications', err);
 //     }
+const groupId = "resize_" + crypto.randomUUID();
+const com = mod.current.value.trim()+`,${groupId}`
 try {
-  console.log(mod.current.value)
+  console.log(mod.current.value,groupId,com )
   const response = await axios.post('http://localhost:5000/nlp/process-command', {
     
-    command: mod.current.value.trim()
+    command: com
   });
   console.log(mod.current.value)
   console.log(response)

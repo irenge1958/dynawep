@@ -49,8 +49,8 @@ IMPORTANT: Return ONLY valid JSON with this exact structure:
       "nthElement": number (optional if not provided),
       "style": "css-properties",
       "widget": "user-friendly widget name",
-      "newtext": "text content (optional)"
-      "createflex":"true" (optional),
+      "content": "text content (mandatory when adding or creating a new element)",
+      "createflex":"new" (mandatory when adding or creating a new element),
       "selectors":[{ element: "img", nthElement: 0 },{ element: "img", nthElement: 1 }](optional),
       "id":"resize_1741365532133"(mandatory if provided)
     }
@@ -62,11 +62,20 @@ CRITICAL RULES:
 2. Always extract the selector from the command
 3. For positioning: use "position: relative" or "position: absolute" but most of the time absolute to ensure the change with appropriate top/left values and should always have a unit(px,s,%,etc...)
 4. When it is color ,just put one style describing the color
+5. When changing elment position such as margin-top:30px,dont forget to put the position:absolute;
+6. Pushing element top or right or left or down,dont forget to push position of the element in absolute
+7. When it is creation of new element,always include the elmenent suggested such as create a button then put element:button,if not suggested the default is div
+RULES FOR ID:
+For commands that create multiple elements (e.g., nthElement:1, nthElement:2, etc.), generate unique IDs for each element. The rule for ID generation should:
+First element: Use a base ID (e.g., resize_1741365532123).
+Subsequent elements: Generate IDs by multiplying the base ID by the element's position (e.g., resize_1741365532123*2, resize_1741365532123*3, etc.), or concatenate the position to the base ID (e.g., resize_1741365532123+1, resize_1741365532123+2, etc.).
+
 Style Ordering Rule:
 _When an element has multiple CSS properties in a single style string, always place metric properties (e.g., width, height, margin, padding,gap) in the second position;example(height: auto; width: 300px instead of width: 300px; height: auto),and if you have many metrics put the most important to the second position associated as well with the widget
-_for images when increasing or decreasing,if i have specified to reduce height or width,set one of the two auto and the other property on the second position give it the numeric value
+_For images, when resizing, if only one dimension (width or height) is provided, apply that value and set the other dimension to auto to preserve the aspect ratio; if both width and height are provided, use both values exactly as specified without setting either to auto; if no dimension is specified, default to width: 100% and height: auto; and if the user simply says “increase” or “decrease size” without specifying a dimension, adjust the width only and set the height to auto, ensuring the image always maintains its aspect ratio unless both dimensions are explicitly defined,also if the command is to just increase height then height will be placed at the second position vice versa with width.
 Metric rule:
 _When assigning such as width:10px if user want to increase double it width:20px if decrease divide by 2 it: width:5px but if not given in the command assign based on standard css size
+
 WIDGET NAMING GUIDELINES:
 - Use action-oriented names: "Change...", "Add...", "Increase...", "Set..."
 - Be specific about what is being modified
@@ -84,7 +93,7 @@ RESPONSE EXAMPLE FOR YOUR COMMAND:
       "nthElement": 3,
       "style": "position: absolute; top: 0px",
       "widget": "Move element to top",
-      "id":"resize_1741365532133"(mandatory if provided)
+      "id":"resize_1741365532133"(mandatory if provided )
     }
   ]
 }
@@ -127,13 +136,18 @@ Command: "make image circular"
 Response: {"operations": [{"element": "img", "style": "border-radius: 50%", "widget": "Make image circular"}]}
 Command: "selector:img,"nthElement": 1,current style:{width:50%},reduce this image resize_1741365532123"
 Response: {"operations": [{"selector": "img","nthElement": 1, "style":"height: auto,width: 25%", "widget": "reduce image","id":"resize_1741365532123"}]}
+Command: "selector:img,"nthElement": 1,current style:{width:50%},reduce this height resize_1741365532123"
+Response: {"operations": [{"selector": "img","nthElement": 1, "style":"width: 25%,height: auto", "widget": "reduce image","id":"resize_1741365532123"}]}
+Command: "selector:div,"nthElement": 1,current style:{width:50%},bring element down resize_s1741365532123"
+Response: {"operations": [{"selector": "div","nthElement": 1, "style":"position:absolute;margin-top: 20px", "widget": "Move element down","id":"resize_s1741365532123"}]}
 Command: "change body background to dark"
 Response: {"operations": [{element": "body", "style": "background-color: #121212", "widget": "Change page background"}]}
 Command: " "selector": "img","nthElement": 1, ,put this image in the middle"
 Response: {"operations": [{"selector": "img","nthElement": 1, "style": "position: absolute;left: 50%;top: 50%;transform: translate(-50%, -50%)", "widget": "push from left"}]}
 Command: "put the first three button in absolute position"
 Response: {"operations": [{ "selector": "button", "limitFirst": 3,"style": "position: absolute","widget": "set Position of the button"}]}
-
+Command: "selector:img,"nthElement": 1,current style:{width:50%},reduce this image resize_1741365532123"
+Response: {"operations": [{"selector": "img","nthElement": 1, "style":"height: auto,width: 25%", "widget": "reduce image","id":"resize_1741365532123"}]}
 Command: "I want these 3 first button to be right in the middle of their container"
 Response: {"operations": [{
   "selector": "button",
@@ -155,6 +169,44 @@ Response: {
     {
       "selector": "div",
       "nthElement": 1,
+      "groupid": "resize_1741365532123",
+      "style": "width: 300px",
+      "widget": "Resize selected elements"
+    },
+    {
+      "selector": "div",
+      "nthElement": 6,
+      "id": "resize_1741365532123*2",
+      "style": "height: auto; width: 300px",
+      "widget": "Resize selected elements"
+    }
+  ]
+}
+Command: "selector:div,nthelement:1,current style:{ "color": "rgb(68, 68, 68)", "background-color": "rgb(204, 204, 204)", "font-size": "14px", "font-family": "Arial, sans-serif", "font-weight": "400" },selector:div,nthelement:6,current style:{ "color": "rgb(68, 68, 68)", "background-color": "rgb(204, 204, 204)", "font-size": "14px", "font-family": "Arial, sans-serif", "font-weight": "400", },set height:300px and width:400px",resize_1741365532123
+Response: {
+  "operations": [
+    {
+      "selector": "div",
+      "nthElement": 1,
+      "groupid": "resize_1741365532123",
+      "style": "height: 300px; width: 400px",
+      "widget": "Resize selected elements"
+    },
+    {
+      "selector": "div",
+      "nthElement": 6,
+      "id": "resize_1741365532123*2",
+      "style": "height: 300px; width: 400px",
+      "widget": "Resize selected elements"
+    }
+  ]
+}
+Command: "selector:div,nthelement:1,current style:{ "color": "rgb(68, 68, 68)", "background-color": "rgb(204, 204, 204)", "font-size": "14px", "font-family": "Arial, sans-serif", "font-weight": "400" },selector:div,nthelement:6,current style:{ "color": "rgb(68, 68, 68)", "background-color": "rgb(204, 204, 204)", "font-size": "14px", "font-family": "Arial, sans-serif", "font-weight": "400", },selector:div,nthelement:7,current style:{ "color": "rgb(68, 68, 68)", "background-color": "rgb(204, 204, 204)", "font-size": "14px", "font-family": "Arial, sans-serif", "font-weight": "400", },give them size 300px",resize_1741365532123
+Response: {
+  "operations": [
+    {
+      "selector": "div",
+      "nthElement": 1,
       "id": "resize_1741365532123",
       "style": "width: 300px",
       "widget": "Resize selected elements"
@@ -162,13 +214,20 @@ Response: {
     {
       "selector": "div",
       "nthElement": 6,
-      "id": "resize_1741365532123",
+      "id": "resize_1741365532123*2",
+      "style": "height: auto; width: 300px",
+      "widget": "Resize selected elements"
+    },
+    {
+      "selector": "div",
+      "nthElement": 7,
+      "id": "resize_1741365532123*3",
       "style": "height: auto; width: 300px",
       "widget": "Resize selected elements"
     }
   ]
 }
-command:"selector:img,nthelement:1,current style:{"color":"rgb(68, 68, 68)","background-color":"rgba(0, 0, 0, 0)","font-size":"14px","font-family":"Arial, sans-serif","font-weight":"400"},selector:img,nthelement:2,current style:{"color":"rgb(68, 68, 68)","background-color":"rgb(204, 204, 204)","font-size":"14px","font-family":"Arial, sans-serif"},selector:img,nthelement:4,current style:{"color":"rgb(68, 68, 68)","background-color":"rgb(204, 204, 204)","font-size":"14px","font-family":"Arial, sans-serif","font-weight":"400"},selector:p,nthelement:3,current style:{"color":"rgb(0, 0, 0)","background-color":"rgba(0, 0, 0, 0)","font-size":"16px","font-family":"Arial, sans-serif","font-weight":"400"},put them on the same line",resize_1741365532123
+command:"selector:img,nthelement:1,current style:{"color":"rgb(68, 68, 68)","background-color":"rgba(0, 0, 0, 0)","font-size":"14px","font-family":"Arial, sans-serif","font-weight":"400"},selector:img,nthelement:2,current style:{"color":"rgb(68, 68, 68)","background-color":"rgb(204, 204, 204)","font-size":"14px","font-family":"Arial, sans-serif"},selector:img,nthelement:4,current style:{"color":"rgb(68, 68, 68)","background-color":"rgb(204, 204, 204)","font-size":"14px","font-family":"Arial, sans-serif","font-weight":"400"},selector:p,nthelement:3,current style:{"color":"rgb(0, 0, 0)","background-color":"rgba(0, 0, 0, 0)","font-size":"16px","font-family":"Arial, sans-serif","font-weight":"400"},put them on the same line,resize_1741365532123
 Response:{"operations": [{
   "selectors": [
     { element: "img", nthElement:1 },
@@ -178,7 +237,7 @@ Response:{"operations": [{
   ],
   "selector":"div",
   "style":"display: flex; gap: 3px;align-items: flex-start",
-  "createflex":"true" ,
+  "createflex":"new" ,
   "widget": "add space between images",
   "id":"resize_1741365532123"
 }]}
@@ -188,8 +247,25 @@ Response: {"operations": [{
 
   "selector": "img",
   "style":"display: flex; gap: 3px;align-items: flex-start",
-  "createflex":"true" ,
+  "createflex":"new" ,
   "widget": "add space between images"
+}]}
+Command: "put entire page to blue,resize_4321f113-45bd-4d47-89e8-81e977eed421 "
+Response: {"operations": [{
+
+  element: 'body',
+  style: 'background-color: blue',
+  widget: 'Change page background to blue',
+  id: 'resize_4321f113-45bd-4d47-89e8-81e977eed421'
+}]}
+command:"selector:html,nthelement:1,current style:{"color":"rgb(68, 68, 68)","background-color":"rgba(0, 0, 0, 0)","font-size":"14px","font-family":"Arial, sans-serif","font-weight":"400"},new style:{position: 'absolute', left: 2px, top: 10px, transform: 'translate(0, 0)', zIndex: 9999},create a new button here saying "hello",resize_1741365532123
+Response: {"operations": [{
+  
+  "element": "button",
+  "style":"position: absolute; left: 2px; top: 10px; transform: translate(0, 0); zIndex: 9999",
+  "createflex":"new" ,
+  "content":"hello",
+  "widget": "move button created to left"
 }]}
 Command: "put on the same line the 3 paragraph from the third"
 Response: {"operations": [{
@@ -197,13 +273,14 @@ Response: {"operations": [{
   "limitStart": 3,
   "limitFirst": 3,
   "style":"display: flex; gap: 3px;align-items: baseline",
-  "createflex":"true" ,
+  "createflex":"new" ,
   "widget": "add space between p"
 }]}
 Command: "selector:div,nthelemnt:3,put the content on the same line"
 Response: {"operations": [ {
   "selector": "div",
   "nthElement": 3,
+  "createflex":"new",
   "style": "gap: 20px",
   "widget": "add space between contents"
 }]}
@@ -234,7 +311,8 @@ Command: "selector:h1,nthElement:3,change this text into welcome to my page"
 Response: {"operations": [ { 
   "selector": "h2",
   "nthElement": 3, 
-  "newtext": "welcome to my page",
+  "content": "welcome to my page",
+  createflex:new
   "style":"none:none".
   "widget": "none"
 }]}
